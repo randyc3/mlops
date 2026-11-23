@@ -41,7 +41,7 @@ with tab1:
             "Product_Allocated_Area": product_allocated_area,
             "Product_MRP": product_mrp,
             "Product_Type_Category": product_type_category,
-            "Product_ID_char": product_id_char,
+            "Product_Id_char": product_id_char,
             "Store_Age_Years": int(store_age_years),
             "Store_Size": store_size,
             "Store_Location_City_Type": store_location_city_type,
