@@ -25,34 +25,24 @@ with tab1:
         product_sugar = st.selectbox("Product Sugar Content", ["Low Sugar", "Regular", "No Sugar"])
         product_allocated_area = st.number_input("Product Allocated Area Ratio", min_value=0.0, max_value=1.0, value=0.05)
         product_mrp = st.number_input("Product MRP", min_value=1.0, value=150.0)
-        product_type = st.selectbox("Product Type", [
-            "Fruits and Vegetables", "Snack Foods", "Frozen Foods", "Dairy",
-            "Household", "Baking Goods", "Canned", "Health and Hygiene",
-            "Meat", "Soft Drinks", "Breads", "Hard Drinks", "Others",
-            "Starchy Foods", "Breakfast", "Seafood"
-        ])
+        product_type_category = st.selectbox("Product Type Category", ["Non Perishables", "Perishables"])
 
     with col2:
-        # Check these against data["Store_Id"].unique() in your notebook
-        store_id = st.selectbox("Store ID", ["OUT001", "OUT002", "OUT003", "OUT004"])
-        store_establishment_year = st.number_input(
-            "Store Establishment Year", min_value=1950, max_value=2026, value=2009, step=1
-        )
-        # Check these against data["Store_Size"].unique()
+        product_id_char = st.selectbox("Product ID Character Prefix", ["FD", "NC", "DR"])
+        store_age_years = st.number_input("Store Age (Years)", min_value=0, max_value=100, value=15, step=1)
         store_size = st.selectbox("Store Size", ["Small", "Medium", "High"])
         store_location_city_type = st.selectbox("Store City Type", ["Tier 1", "Tier 2", "Tier 3"])
         store_type = st.selectbox("Store Type", ["Supermarket Type1", "Supermarket Type2", "Departmental Store", "Food Mart"])
 
     if st.button("Forecast Sales", key="single_predict"):
-        # Raw fields only. The backend calculates store age and does the encoding.
         payload = {
             "Product_Weight": product_weight,
             "Product_Sugar_Content": product_sugar,
             "Product_Allocated_Area": product_allocated_area,
             "Product_MRP": product_mrp,
-            "Product_Type": product_type,
-            "Store_Id": store_id,
-            "Store_Establishment_Year": int(store_establishment_year),
+            "Product_Type_Category": product_type_category,
+            "Product_ID_char": product_id_char,
+            "Store_Age_Years": int(store_age_years),
             "Store_Size": store_size,
             "Store_Location_City_Type": store_location_city_type,
             "Store_Type": store_type,
@@ -62,7 +52,6 @@ with tab1:
             res = requests.post(f"{BACKEND_URL}/v1/predict", json=payload, timeout=30)
             if res.status_code == 200:
                 body = res.json()
-                # Accept either response key the backend might use
                 pred = body.get("prediction", body.get("predicted_sales"))
                 st.success(f"Predicted Total Store Revenue: ${float(pred):,.2f}")
             else:
@@ -74,8 +63,8 @@ with tab2:
     st.header("Batch File Sales Forecast")
     st.write(
         "Upload a CSV with these columns: Product_Weight, Product_Sugar_Content, "
-        "Product_Allocated_Area, Product_MRP, Product_Type, Store_Id, "
-        "Store_Establishment_Year, Store_Size, Store_Location_City_Type, Store_Type."
+        "Product_Allocated_Area, Product_MRP, Product_Type_Category, Product_ID_char, "
+        "Store_Age_Years, Store_Size, Store_Location_City_Type, Store_Type."
     )
 
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -88,7 +77,6 @@ with tab2:
                     preds = res.json()
                     st.success("Batch Forecasting Finished!")
 
-                    # Handle either a {row: value} dict or a list of values
                     if isinstance(preds, dict):
                         df_results = pd.DataFrame(list(preds.items()), columns=["Row Index", "Predicted Sales Value"])
                     else:
